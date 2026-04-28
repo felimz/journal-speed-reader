@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journal Speed Reader — RSVP Academic Paper Reader</title>
+  <meta name="description" content="Speed-read academic journal articles with RSVP (Rapid Serial Visual Presentation). Upload a PDF or paste text to read word-by-word with optimal recognition point alignment." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,700;1,7..72,400&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
+</head>
+<body>
+  <div id="app">
+    <!-- Upload Screen -->
+    <section id="upload-screen" class="screen active">
+      <div class="upload-container">
+        <header class="app-header">
+          <h1 class="app-title">
+            <span class="title-icon">📖</span>
+            Journal <span class="accent">Speed</span> Reader
+          </h1>
+          <p class="app-subtitle">RSVP-powered academic paper reading</p>
+        </header>
+
+        <div class="input-tabs">
+          <button class="tab-btn active" data-tab="pdf" id="tab-pdf">Upload PDF</button>
+          <button class="tab-btn" data-tab="paste" id="tab-paste">Paste Text</button>
+        </div>
+
+        <div class="tab-content" id="tab-content-pdf">
+          <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-inner">
+              <div class="drop-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="12" y1="18" x2="12" y2="12" />
+                  <polyline points="9 15 12 12 15 15" />
+                </svg>
+              </div>
+              <p class="drop-text">Drag & drop your PDF here</p>
+              <p class="drop-subtext">or</p>
+              <label class="file-btn" for="file-input">Choose File</label>
+              <input type="file" id="file-input" accept=".pdf" hidden />
+              <p class="file-hint">Non-scanned academic PDFs only</p>
+              <button class="dev-btn" id="dev-load-test" title="Dev: load references/test.pdf">Load test.pdf</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content hidden" id="tab-content-paste">
+          <textarea id="paste-area" class="paste-area" placeholder="Paste your article text here...&#10;&#10;The reader will automatically detect paragraph and section breaks."></textarea>
+          <button class="start-btn" id="start-paste-btn">
+            <span>Start Reading</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+          </button>
+        </div>
+
+        <div class="processing-overlay hidden" id="processing-overlay">
+          <div class="processing-spinner">
+            <div class="processing-scan-line"></div>
+            <div class="processing-lines">
+              <div class="processing-line-item"></div>
+              <div class="processing-line-item"></div>
+              <div class="processing-line-item"></div>
+              <div class="processing-line-item"></div>
+            </div>
+          </div>
+          <p class="processing-text">Extracting body text…</p>
+          <p class="processing-subtext" id="processing-status">Analyzing page layout</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reader Screen -->
+    <section id="reader-screen" class="screen">
+      <div class="reader-container">
+        <!-- RSVP Display -->
+        <div class="rsvp-display" id="rsvp-display">
+          <div class="guide-line top">
+            <div class="guide-tick"></div>
+          </div>
+          <div class="word-container" id="word-container">
+            <span class="word-before" id="word-before"></span>
+            <span class="word-pivot" id="word-pivot"></span>
+            <span class="word-after" id="word-after"></span>
+          </div>
+          <div class="guide-line bottom">
+            <div class="guide-tick"></div>
+          </div>
+        </div>
+
+        <!-- Section Announcement -->
+        <div class="section-announce hidden" id="section-announce">
+          <span class="section-label" id="section-label"></span>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progress-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls" id="controls">
+          <div class="controls-left">
+            <button class="ctrl-btn" id="btn-back" title="Back 10 words (←)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+            </button>
+            <button class="ctrl-btn play-btn" id="btn-play" title="Play / Pause (Space)">
+              <svg class="icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+              <svg class="icon-pause hidden" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <button class="ctrl-btn" id="btn-forward" title="Forward 10 words (→)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+            </button>
+          </div>
+
+          <div class="controls-center">
+            <span class="wpm-label" id="wpm-label">300 wpm</span>
+            <input type="range" id="wpm-slider" class="wpm-slider" min="100" max="900" value="300" step="25" />
+          </div>
+
+          <div class="controls-right">
+            <span class="word-count" id="word-count">0 / 0</span>
+            <button class="ctrl-btn" id="btn-reset" title="Back to start">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+            <button class="ctrl-btn new-doc-btn" id="btn-new" title="New document (Esc twice)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span class="new-doc-label">New</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Keyboard hint -->
+        <div class="keyboard-hint" id="keyboard-hint">
+          <span><kbd>Space</kbd> Play/Pause</span>
+          <span><kbd>←</kbd><kbd>→</kbd> Skip</span>
+          <span><kbd>↑</kbd><kbd>↓</kbd> Speed</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
