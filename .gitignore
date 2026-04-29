@@ -3,5 +3,5 @@ dist/
 .DS_Store
 .env
 .agents/
-.junie/
-.firebase/  
+.firebase/
+.firebaserc
