@@ -52,7 +52,8 @@ export class RSVPEngine {
   /** Current progress as a fraction 0–1 */
   get progress() {
     if (this.tokens.length === 0) return 0;
-    return this.currentIndex / (this.tokens.length - 1);
+    if (this.tokens.length === 1) return this.currentIndex > 0 ? 1 : 0;
+    return Math.min(1, this.currentIndex / (this.tokens.length - 1));
   }
 
   /** Set WPM */
@@ -113,6 +114,7 @@ export class RSVPEngine {
     if (!this.isPlaying) return;
     if (this.currentIndex >= this.tokens.length) {
       this.pause();
+      this._emit('progress', this.progress);
       this._emit('complete');
       return;
     }
