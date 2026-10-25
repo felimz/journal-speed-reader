@@ -9,6 +9,7 @@ import { buildRSVPTokens } from './processing/tokenizer.js';
 import { sanitizeTokens } from './processing/sanitizer.js';
 import { RSVPEngine } from './reader/engine.js';
 import { RSVPDisplay } from './reader/display.js';
+import testPdfUrl from '../references/test.pdf?url';
 
 // ── DOM Helpers ───────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -100,7 +101,7 @@ const devLoadTest = $('dev-load-test');
 devLoadTest.addEventListener('click', async () => {
   showProcessing();
   try {
-    const response = await fetch('/references/test.pdf');
+    const response = await fetch(testPdfUrl);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const arrayBuffer = await response.arrayBuffer();
     const result = await extractTextFromPDF(arrayBuffer, (status) => {
